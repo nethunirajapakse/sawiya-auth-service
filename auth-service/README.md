@@ -106,6 +106,32 @@ attempts on a leaked hash while remaining fast enough for normal login latency.
 
 ## Running locally
 
+### Local secrets (recommended over relying on the dev-only defaults)
+
+`application.properties` falls back to hardcoded dev values (e.g. `JWT_SECRET` defaults to
+a placeholder) so the project runs out of the box, but you shouldn't rely on that beyond
+local testing. To use real secrets without ever committing them:
+
+```powershell
+copy src\main\resources\application-secrets.properties.example src\main\resources\application-secrets.properties
+# edit application-secrets.properties with a real JWT secret and DB password
+mvn spring-boot:run "-Dspring-boot.run.profiles=secrets"
+```
+
+`application-secrets.properties` is gitignored — only the `.example` template (with
+placeholder values) is committed, so anyone cloning the repo knows what to fill in without
+ever seeing a real secret. This is a profile-specific override (Spring only loads
+`application-secrets.properties` when the `secrets` profile is active), so its values take
+precedence over the defaults in `application.properties` regardless of what environment
+variables are set. The key names in it must match the `${...}` placeholder names used in
+`application.properties` exactly (e.g. `DB_PASSWORD`, `JWT_SECRET`) — a key that doesn't
+match any placeholder is silently ignored rather than causing an error, so double-check
+spelling if an override doesn't seem to take effect.
+
+If you'd rather use plain environment variables instead of a profile file (e.g. in CI or a
+container), the same properties are already wired to `JWT_SECRET`, `DB_USERNAME`,
+`DB_PASSWORD`, etc. — see the Configuration table below.
+
 ### Prerequisites
 - Java 17+
 - Maven 3.9+
@@ -170,7 +196,7 @@ curl -i -b cookies.txt http://localhost:8080/api/auth/me   # -> 401
 ### Configuration
 
 All security-sensitive values are environment-variable driven (see
-`src/main/resources/application.yml`):
+`src/main/resources/application.properties`):
 
 | Variable | Default | Purpose |
 |---|---|---|

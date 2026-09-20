@@ -20,7 +20,7 @@ cookie sessions.
 ## How a request flows
 
 ```mermaid
-flowchart LR
+flowchart TD
     Client(["Client<br/>browser / Postman"])
 
     subgraph App["Auth Service - Spring Boot"]

@@ -21,14 +21,22 @@ cookie sessions.
 
 ```mermaid
 flowchart LR
-    Client(["Client"])
-    Auth["Sawiya Auth Service<br/>stateless, cookie-based JWT auth"]
-    Postgres[("PostgreSQL<br/>user accounts")]
-    Redis[("Redis<br/>token revocation")]
+    Client(["Client<br/>browser / Postman"])
 
-    Client <--> Auth
-    Auth --> Postgres
-    Auth -- "via circuit breaker" --> Redis
+    subgraph App["Auth Service - Spring Boot"]
+        direction TB
+        Filters["Security filter chain<br/>JWT auth + CSRF"]
+        Controller["Auth controller"]
+        Service["Auth service + token stores"]
+        Filters --> Controller --> Service
+    end
+
+    Postgres[("PostgreSQL<br/>user accounts")]
+    Redis[("Redis<br/>denylist + refresh tokens")]
+
+    Client -- "HTTPS, cookies" --> Filters
+    Service --> Postgres
+    App -- "via circuit breaker" --> Redis
 ```
 
 Redis calls go through a Resilience4j circuit breaker: if Redis is unreachable, reads fail

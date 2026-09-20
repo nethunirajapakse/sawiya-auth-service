@@ -1,7 +1,6 @@
 # Sawiya Auth Service
 
-#### A User Authentication REST API built with Java 17 and Spring Boot 3, submitted for the
-Sawiya Backend Developer (Java / Spring Boot) technical assignment.
+#### A User Authentication REST API built with Java 17 and Spring Boot 3, submitted for the Sawiya Backend Developer (Java / Spring Boot) technical assignment.
 
 ## Endpoints
 

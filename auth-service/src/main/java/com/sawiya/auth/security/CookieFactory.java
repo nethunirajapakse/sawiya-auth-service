@@ -2,6 +2,7 @@ package com.sawiya.auth.security;
 
 import com.sawiya.auth.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
@@ -16,11 +17,22 @@ public class CookieFactory {
 
     private final CookieProperties cookieProperties;
 
-    public ResponseCookie buildAccessTokenCookie(String token, Duration maxAge) {
+    public void addAuthCookies(HttpHeaders headers, String accessToken, Duration accessMaxAge,
+                               String refreshToken, Duration refreshMaxAge) {
+        headers.add(HttpHeaders.SET_COOKIE, buildAccessTokenCookie(accessToken, accessMaxAge).toString());
+        headers.add(HttpHeaders.SET_COOKIE, buildRefreshTokenCookie(refreshToken, refreshMaxAge).toString());
+    }
+
+    public void addExpiredAuthCookies(HttpHeaders headers) {
+        headers.add(HttpHeaders.SET_COOKIE, buildExpiredAccessTokenCookie().toString());
+        headers.add(HttpHeaders.SET_COOKIE, buildExpiredRefreshTokenCookie().toString());
+    }
+
+    private ResponseCookie buildAccessTokenCookie(String token, Duration maxAge) {
         return build(ACCESS_TOKEN_COOKIE, token, maxAge);
     }
 
-    public ResponseCookie buildRefreshTokenCookie(String token, Duration maxAge) {
+    private ResponseCookie buildRefreshTokenCookie(String token, Duration maxAge) {
         return ResponseCookie.from(REFRESH_TOKEN_COOKIE, token)
                 .httpOnly(true)
                 .secure(cookieProperties.isSecure())
@@ -30,11 +42,11 @@ public class CookieFactory {
                 .build();
     }
 
-    public ResponseCookie buildExpiredAccessTokenCookie() {
+    private ResponseCookie buildExpiredAccessTokenCookie() {
         return build(ACCESS_TOKEN_COOKIE, "", Duration.ZERO);
     }
 
-    public ResponseCookie buildExpiredRefreshTokenCookie() {
+    private ResponseCookie buildExpiredRefreshTokenCookie() {
         return ResponseCookie.from(REFRESH_TOKEN_COOKIE, "")
                 .httpOnly(true)
                 .secure(cookieProperties.isSecure())

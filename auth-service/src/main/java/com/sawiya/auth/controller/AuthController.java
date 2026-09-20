@@ -10,12 +10,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.UUID;
 
 @RestController
@@ -53,12 +53,11 @@ public class AuthController {
 
         authService.signout(accessTokenCookie, refreshTokenCookie);
 
-        ResponseCookie expiredAccess = cookieFactory.buildExpiredAccessTokenCookie();
-        ResponseCookie expiredRefresh = cookieFactory.buildExpiredRefreshTokenCookie();
+        HttpHeaders headers = new HttpHeaders();
+        cookieFactory.addExpiredAuthCookies(headers);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, expiredAccess.toString())
-                .header(HttpHeaders.SET_COOKIE, expiredRefresh.toString())
+                .headers(headers)
                 .body(new MessageResponseDTO("Logout successful"));
     }
 
@@ -69,16 +68,16 @@ public class AuthController {
     }
 
     private ResponseEntity<MessageResponseDTO> withTokenCookies(AuthService.TokenPair tokens, MessageResponseDTO body) {
-        ResponseCookie accessCookie = cookieFactory.buildAccessTokenCookie(
+        HttpHeaders headers = new HttpHeaders();
+        cookieFactory.addAuthCookies(
+                headers,
                 tokens.accessToken().token(),
-                Duration.between(java.time.Instant.now(), tokens.accessToken().expiresAt()));
-        ResponseCookie refreshCookie = cookieFactory.buildRefreshTokenCookie(
+                Duration.between(Instant.now(), tokens.accessToken().expiresAt()),
                 tokens.refreshToken().token(),
-                Duration.between(java.time.Instant.now(), tokens.refreshToken().expiresAt()));
+                Duration.between(Instant.now(), tokens.refreshToken().expiresAt()));
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .headers(headers)
                 .body(body);
     }
 }

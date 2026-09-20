@@ -70,7 +70,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- H2 kept for the test profile only -->
+        <!-- H2 kept for the test profile only, so integration tests need no external DB -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -93,7 +93,6 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
-
         <!-- Embedded Redis for integration tests -->
         <dependency>
             <groupId>com.github.codemonstur</groupId>
@@ -102,7 +101,8 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Resilience4j -->
+        <!-- Resilience4j: circuit breaker around Redis calls, so a Redis outage fails fast
+     instead of every request blocking on a connection timeout. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>

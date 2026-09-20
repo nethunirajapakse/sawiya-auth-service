@@ -22,31 +22,32 @@ public class GlobalExceptionHandler {
                 .map(fieldError -> fieldError.getDefaultMessage())
                 .toList();
         return ResponseEntity.badRequest()
-                .body(ErrorResponseDTO.of(400, "Validation Failed", messages));
+                .body(ErrorResponseDTO.of(HttpStatus.BAD_REQUEST.value(), "Validation Failed", messages));
     }
 
     @ExceptionHandler(DuplicateEmailException.class)
     public ResponseEntity<ErrorResponseDTO> handleDuplicateEmail(DuplicateEmailException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ErrorResponseDTO.of(409, "Conflict", List.of(ex.getMessage())));
+                .body(ErrorResponseDTO.of(HttpStatus.CONFLICT.value(), "Conflict", List.of(ex.getMessage())));
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ErrorResponseDTO> handleInvalidCredentials(InvalidCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ErrorResponseDTO.of(401, "Unauthorized", List.of(ex.getMessage())));
+                .body(ErrorResponseDTO.of(HttpStatus.UNAUTHORIZED.value(), "Unauthorized", List.of(ex.getMessage())));
     }
 
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ErrorResponseDTO> handleUnauthorized(UnauthorizedException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ErrorResponseDTO.of(401, "Unauthorized", List.of(ex.getMessage())));
+                .body(ErrorResponseDTO.of(HttpStatus.UNAUTHORIZED.value(), "Unauthorized", List.of(ex.getMessage())));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handleGeneric(Exception ex) {
         log.error("Unhandled exception in request handling", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponseDTO.of(500, "Internal Server Error", List.of("An unexpected error occurred")));
+                .body(ErrorResponseDTO.of(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error",
+                        List.of("An unexpected error occurred")));
     }
 }

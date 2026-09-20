@@ -1,5 +1,6 @@
 package com.sawiya.auth.security;
 
+import com.sawiya.auth.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
@@ -23,8 +24,8 @@ public class CookieFactory {
         return ResponseCookie.from(REFRESH_TOKEN_COOKIE, token)
                 .httpOnly(true)
                 .secure(cookieProperties.isSecure())
-                .sameSite("Strict")
-                .path("/api/auth")
+                .sameSite(AppConstants.COOKIE_SAME_SITE)
+                .path(AppConstants.COOKIE_AUTH_PATH)
                 .maxAge(maxAge)
                 .build();
     }
@@ -37,8 +38,8 @@ public class CookieFactory {
         return ResponseCookie.from(REFRESH_TOKEN_COOKIE, "")
                 .httpOnly(true)
                 .secure(cookieProperties.isSecure())
-                .sameSite("Strict")
-                .path("/api/auth")
+                .sameSite(AppConstants.COOKIE_SAME_SITE)
+                .path(AppConstants.COOKIE_AUTH_PATH)
                 .maxAge(Duration.ZERO)
                 .build();
     }
@@ -47,8 +48,8 @@ public class CookieFactory {
         return ResponseCookie.from(name, value)
                 .httpOnly(true)
                 .secure(cookieProperties.isSecure())
-                .sameSite("Strict")
-                .path("/")
+                .sameSite(AppConstants.COOKIE_SAME_SITE)
+                .path(AppConstants.COOKIE_ROOT_PATH)
                 .maxAge(maxAge)
                 .build();
     }

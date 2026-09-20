@@ -20,14 +20,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Reads the access_token httpOnly cookie, validates the JWT (signature, expiry, and that
- * its jti is not denylisted), and populates the SecurityContext so downstream code can
- * use @AuthenticationPrincipal / SecurityContextHolder as usual.
- * <p>
- * Any failure here simply leaves the request unauthenticated - Spring Security's
- * authorization rules then decide whether that's acceptable for the requested path.
- */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {

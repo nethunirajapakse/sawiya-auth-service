@@ -1,5 +1,6 @@
 package com.sawiya.auth.service;
 
+import com.sawiya.auth.constants.AppConstants;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -15,11 +16,11 @@ import java.time.Instant;
 public class TokenDenylistService {
 
     private static final Logger log = LoggerFactory.getLogger(TokenDenylistService.class);
-    private static final String KEY_PREFIX = "denylist:";
+    private static final String KEY_PREFIX = AppConstants.DENYLIST_KEY_PREFIX;
 
     private final StringRedisTemplate redisTemplate;
 
-    @CircuitBreaker(name = "redis", fallbackMethod = "denylistFallback")
+    @CircuitBreaker(name = AppConstants.REDIS_CIRCUIT_BREAKER_NAME, fallbackMethod = "denylistFallback")
     public void denylist(String jti, Instant expiresAt) {
         long ttlSeconds = Duration.between(Instant.now(), expiresAt).getSeconds();
         if (ttlSeconds <= 0) {
@@ -35,7 +36,7 @@ public class TokenDenylistService {
                 "until it naturally expires.", jti, t.toString());
     }
 
-    @CircuitBreaker(name = "redis", fallbackMethod = "isDenylistedFallback")
+    @CircuitBreaker(name = AppConstants.REDIS_CIRCUIT_BREAKER_NAME, fallbackMethod = "isDenylistedFallback")
     public boolean isDenylisted(String jti) {
         return Boolean.TRUE.equals(redisTemplate.hasKey(KEY_PREFIX + jti));
     }

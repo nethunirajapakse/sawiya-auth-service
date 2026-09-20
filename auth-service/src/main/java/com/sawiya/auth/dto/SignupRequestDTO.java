@@ -1,5 +1,6 @@
 package com.sawiya.auth.dto;
 
+import com.sawiya.auth.constants.AppConstants;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -21,11 +22,10 @@ public class SignupRequestDTO {
     @Email(message = "Email must be a valid email address")
     private String email;
 
-    // Policy: min 8 chars, at least one uppercase, one lowercase, one digit, one special char.
     @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be at least 8 characters long")
     @Pattern(
-        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#^()_+\\-=]).+$",
+        regexp = AppConstants.PASSWORD_PATTERN,
         message = "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character"
     )
     private String password;

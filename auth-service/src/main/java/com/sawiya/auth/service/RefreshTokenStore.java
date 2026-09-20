@@ -1,5 +1,6 @@
 package com.sawiya.auth.service;
 
+import com.sawiya.auth.constants.AppConstants;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -15,11 +16,11 @@ import java.time.Instant;
 public class RefreshTokenStore {
 
     private static final Logger log = LoggerFactory.getLogger(RefreshTokenStore.class);
-    private static final String KEY_PREFIX = "refresh:";
+    private static final String KEY_PREFIX = AppConstants.REFRESH_TOKEN_KEY_PREFIX;
 
     private final StringRedisTemplate redisTemplate;
 
-    @CircuitBreaker(name = "redis", fallbackMethod = "storeFallback")
+    @CircuitBreaker(name = AppConstants.REDIS_CIRCUIT_BREAKER_NAME, fallbackMethod = "storeFallback")
     public void store(String jti, String userId, Instant expiresAt) {
         long ttlSeconds = Duration.between(Instant.now(), expiresAt).getSeconds();
         if (ttlSeconds <= 0) {
@@ -35,7 +36,7 @@ public class RefreshTokenStore {
                 "Redis recovers and a new one is issued.", jti, userId, t.toString());
     }
 
-    @CircuitBreaker(name = "redis", fallbackMethod = "isValidFallback")
+    @CircuitBreaker(name = AppConstants.REDIS_CIRCUIT_BREAKER_NAME, fallbackMethod = "isValidFallback")
     public boolean isValid(String jti) {
         return Boolean.TRUE.equals(redisTemplate.hasKey(KEY_PREFIX + jti));
     }
@@ -48,7 +49,7 @@ public class RefreshTokenStore {
         return true;
     }
 
-    @CircuitBreaker(name = "redis", fallbackMethod = "revokeFallback")
+    @CircuitBreaker(name = AppConstants.REDIS_CIRCUIT_BREAKER_NAME, fallbackMethod = "revokeFallback")
     public void revoke(String jti) {
         redisTemplate.delete(KEY_PREFIX + jti);
     }

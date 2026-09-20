@@ -1,6 +1,7 @@
 package com.sawiya.auth.service;
 
 import com.sawiya.auth.EmbeddedRedisTestBase;
+import com.sawiya.auth.constants.AppConstants;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.jupiter.api.AfterEach;
@@ -27,13 +28,13 @@ class RedisCircuitBreakerTest extends EmbeddedRedisTestBase {
 
     @AfterEach
     void resetCircuitBreaker() {
-        CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker("redis");
+        CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker(AppConstants.REDIS_CIRCUIT_BREAKER_NAME);
         breaker.reset();
     }
 
     @Test
     void isDenylisted_failsOpenWhenCircuitBreakerIsOpen() {
-        circuitBreakerRegistry.circuitBreaker("redis").transitionToOpenState();
+        circuitBreakerRegistry.circuitBreaker(AppConstants.REDIS_CIRCUIT_BREAKER_NAME).transitionToOpenState();
 
         boolean result = tokenDenylistService.isDenylisted("some-jti");
 
@@ -42,7 +43,7 @@ class RedisCircuitBreakerTest extends EmbeddedRedisTestBase {
 
     @Test
     void isValid_failsOpenWhenCircuitBreakerIsOpen() {
-        circuitBreakerRegistry.circuitBreaker("redis").transitionToOpenState();
+        circuitBreakerRegistry.circuitBreaker(AppConstants.REDIS_CIRCUIT_BREAKER_NAME).transitionToOpenState();
 
         boolean result = refreshTokenStore.isValid("some-jti");
 
@@ -51,7 +52,7 @@ class RedisCircuitBreakerTest extends EmbeddedRedisTestBase {
 
     @Test
     void denylist_doesNotThrowWhenCircuitBreakerIsOpen() {
-        circuitBreakerRegistry.circuitBreaker("redis").transitionToOpenState();
+        circuitBreakerRegistry.circuitBreaker(AppConstants.REDIS_CIRCUIT_BREAKER_NAME).transitionToOpenState();
 
         assertThatCode(() -> tokenDenylistService.denylist("some-jti", Instant.now().plusSeconds(900)))
                 .doesNotThrowAnyException();
@@ -59,7 +60,7 @@ class RedisCircuitBreakerTest extends EmbeddedRedisTestBase {
 
     @Test
     void revoke_doesNotThrowWhenCircuitBreakerIsOpen() {
-        circuitBreakerRegistry.circuitBreaker("redis").transitionToOpenState();
+        circuitBreakerRegistry.circuitBreaker(AppConstants.REDIS_CIRCUIT_BREAKER_NAME).transitionToOpenState();
 
         assertThatCode(() -> refreshTokenStore.revoke("some-jti"))
                 .doesNotThrowAnyException();

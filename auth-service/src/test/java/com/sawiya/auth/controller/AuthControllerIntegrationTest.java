@@ -11,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,14 +43,12 @@ class AuthControllerIntegrationTest extends EmbeddedRedisTestBase {
         String email = "flow-user@example.com";
         String password = "Password@123";
 
-        // 1. Signup
         mockMvc.perform(post("/api/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(signupBody(email, password))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Signup successful"));
 
-        // 2. Signin
         Map<String, String> signinBody = Map.of("email", email, "password", password);
         MvcResult signinResult = mockMvc.perform(post("/api/auth/signin")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -64,7 +61,6 @@ class AuthControllerIntegrationTest extends EmbeddedRedisTestBase {
 
         Cookie accessCookie = signinResult.getResponse().getCookie("access_token");
 
-        // 3. /me with the access token cookie
         mockMvc.perform(get("/api/auth/me").cookie(accessCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value(email))
@@ -137,18 +133,11 @@ class AuthControllerIntegrationTest extends EmbeddedRedisTestBase {
         Cookie accessCookie = signinResult.getResponse().getCookie("access_token");
         Cookie refreshCookie = signinResult.getResponse().getCookie("refresh_token");
 
-        // Real clients get their CSRF token from a prior response's XSRF-TOKEN cookie, but
-        // that cookie is only written when Spring Security actually resolves a CsrfToken
-        // during a request - a plain GET /me never triggers that. .with(csrf()) is Spring
-        // Security's supported way to simulate "the client already has a valid CSRF token"
-        // without depending on that side effect, and works with any CsrfTokenRepository
-        // (including our CookieCsrfTokenRepository).
         mockMvc.perform(post("/api/auth/signout")
                         .with(csrf())
                         .cookie(accessCookie, refreshCookie))
                 .andExpect(status().isOk());
 
-        // The same (now-denylisted) access token must no longer work.
         mockMvc.perform(get("/api/auth/me").cookie(accessCookie))
                 .andExpect(status().isUnauthorized());
     }

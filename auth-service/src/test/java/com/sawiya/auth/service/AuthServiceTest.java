@@ -1,7 +1,7 @@
 package com.sawiya.auth.service;
 
-import com.sawiya.auth.dto.SigninRequest;
-import com.sawiya.auth.dto.SignupRequest;
+import com.sawiya.auth.dto.SigninRequestDTO;
+import com.sawiya.auth.dto.SignupRequestDTO;
 import com.sawiya.auth.entity.User;
 import com.sawiya.auth.exception.DuplicateEmailException;
 import com.sawiya.auth.exception.InvalidCredentialsException;
@@ -59,7 +59,7 @@ class AuthServiceTest {
 
     @Test
     void signup_throwsWhenEmailAlreadyExists() {
-        SignupRequest request = new SignupRequest();
+        SignupRequestDTO request = new SignupRequestDTO();
         request.setEmail("nethuni@example.com");
         request.setPassword("Password@123");
         request.setFirstName("Nethuni");
@@ -75,7 +75,7 @@ class AuthServiceTest {
 
     @Test
     void signup_hashesPasswordBeforeSaving() {
-        SignupRequest request = new SignupRequest();
+        SignupRequestDTO request = new SignupRequestDTO();
         request.setEmail("new@example.com");
         request.setPassword("Password@123");
         request.setFirstName("New");
@@ -91,7 +91,7 @@ class AuthServiceTest {
 
     @Test
     void signin_succeedsWithCorrectPassword() {
-        SigninRequest request = new SigninRequest();
+        SigninRequestDTO request = new SigninRequestDTO();
         request.setEmail(existingUser.getEmail());
         request.setPassword("correct-password");
 
@@ -111,7 +111,7 @@ class AuthServiceTest {
 
     @Test
     void signin_failsWithWrongPassword() {
-        SigninRequest request = new SigninRequest();
+        SigninRequestDTO request = new SigninRequestDTO();
         request.setEmail(existingUser.getEmail());
         request.setPassword("wrong-password");
 
@@ -124,7 +124,7 @@ class AuthServiceTest {
 
     @Test
     void signin_failsWhenUserDoesNotExist() {
-        SigninRequest request = new SigninRequest();
+        SigninRequestDTO request = new SigninRequestDTO();
         request.setEmail("nobody@example.com");
         request.setPassword("whatever");
 

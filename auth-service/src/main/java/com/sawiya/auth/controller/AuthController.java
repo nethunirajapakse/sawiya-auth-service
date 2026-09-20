@@ -1,9 +1,9 @@
 package com.sawiya.auth.controller;
 
-import com.sawiya.auth.dto.MessageResponse;
-import com.sawiya.auth.dto.SigninRequest;
-import com.sawiya.auth.dto.SignupRequest;
-import com.sawiya.auth.dto.UserResponse;
+import com.sawiya.auth.dto.MessageResponseDTO;
+import com.sawiya.auth.dto.SigninRequestDTO;
+import com.sawiya.auth.dto.SignupRequestDTO;
+import com.sawiya.auth.dto.UserResponseDTO;
 import com.sawiya.auth.exception.UnauthorizedException;
 import com.sawiya.auth.security.CookieFactory;
 import com.sawiya.auth.service.AuthService;
@@ -28,30 +28,30 @@ public class AuthController {
     private final CookieFactory cookieFactory;
 
     @PostMapping("/signup")
-    public ResponseEntity<MessageResponse> signup(@Valid @RequestBody SignupRequest request) {
+    public ResponseEntity<MessageResponseDTO> signup(@Valid @RequestBody SignupRequestDTO request) {
         authService.signup(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new MessageResponse("Signup successful"));
+                .body(new MessageResponseDTO("Signup successful"));
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<MessageResponse> signin(@Valid @RequestBody SigninRequest request) {
+    public ResponseEntity<MessageResponseDTO> signin(@Valid @RequestBody SigninRequestDTO request) {
         AuthService.TokenPair tokens = authService.signin(request);
-        return withTokenCookies(tokens, new MessageResponse("Login successful"));
+        return withTokenCookies(tokens, new MessageResponseDTO("Login successful"));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<MessageResponse> refresh(
+    public ResponseEntity<MessageResponseDTO> refresh(
             @CookieValue(name = CookieFactory.REFRESH_TOKEN_COOKIE, required = false) String refreshTokenCookie) {
         if (refreshTokenCookie == null) {
             throw new UnauthorizedException("Refresh token missing");
         }
         AuthService.TokenPair tokens = authService.refresh(refreshTokenCookie);
-        return withTokenCookies(tokens, new MessageResponse("Token refreshed"));
+        return withTokenCookies(tokens, new MessageResponseDTO("Token refreshed"));
     }
 
     @PostMapping("/signout")
-    public ResponseEntity<MessageResponse> signout(
+    public ResponseEntity<MessageResponseDTO> signout(
             @CookieValue(name = CookieFactory.ACCESS_TOKEN_COOKIE, required = false) String accessTokenCookie,
             @CookieValue(name = CookieFactory.REFRESH_TOKEN_COOKIE, required = false) String refreshTokenCookie) {
 
@@ -63,16 +63,16 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, expiredAccess.toString())
                 .header(HttpHeaders.SET_COOKIE, expiredRefresh.toString())
-                .body(new MessageResponse("Logout successful"));
+                .body(new MessageResponseDTO("Logout successful"));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserResponse> me(Authentication authentication) {
+    public ResponseEntity<UserResponseDTO> me(Authentication authentication) {
         UUID userId = (UUID) authentication.getPrincipal();
         return ResponseEntity.ok(authService.getCurrentUser(userId));
     }
 
-    private ResponseEntity<MessageResponse> withTokenCookies(AuthService.TokenPair tokens, MessageResponse body) {
+    private ResponseEntity<MessageResponseDTO> withTokenCookies(AuthService.TokenPair tokens, MessageResponseDTO body) {
         ResponseCookie accessCookie = cookieFactory.buildAccessTokenCookie(
                 tokens.accessToken().token(),
                 Duration.between(java.time.Instant.now(), tokens.accessToken().expiresAt()));

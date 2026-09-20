@@ -1,8 +1,8 @@
 package com.sawiya.auth.service;
 
-import com.sawiya.auth.dto.SigninRequest;
-import com.sawiya.auth.dto.SignupRequest;
-import com.sawiya.auth.dto.UserResponse;
+import com.sawiya.auth.dto.SigninRequestDTO;
+import com.sawiya.auth.dto.SignupRequestDTO;
+import com.sawiya.auth.dto.UserResponseDTO;
 import com.sawiya.auth.entity.User;
 import com.sawiya.auth.exception.DuplicateEmailException;
 import com.sawiya.auth.exception.InvalidCredentialsException;
@@ -27,7 +27,7 @@ public class AuthService {
     private final TokenDenylistService tokenDenylistService;
     private final RefreshTokenStore refreshTokenStore;
 
-    public void signup(SignupRequest request) {
+    public void signup(SignupRequestDTO request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new DuplicateEmailException("An account with this email already exists");
         }
@@ -42,12 +42,7 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    /**
-     * Verifies credentials and issues a fresh access/refresh token pair.
-     * Deliberately returns nothing about the user - the caller must hit /me for that,
-     * keeping this, the most-attacked endpoint, minimal in what it reveals.
-     */
-    public TokenPair signin(SigninRequest request) {
+    public TokenPair signin(SigninRequestDTO request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
 
@@ -58,11 +53,6 @@ public class AuthService {
         return issueTokenPair(user.getId(), user.getEmail());
     }
 
-    /**
-     * Validates the refresh token (signature, expiry, and that its jti is still
-     * in the live registry) and rotates both tokens - old refresh token is revoked,
-     * a new pair is issued. This limits the blast radius if a refresh token is ever replayed.
-     */
     public TokenPair refresh(String refreshToken) {
         Claims claims = parseOrThrow(refreshToken);
 
@@ -81,10 +71,6 @@ public class AuthService {
         return issueTokenPair(user.getId(), user.getEmail());
     }
 
-    /**
-     * Denylists the current access token (so it stops working immediately, even though it
-     * hasn't expired) and revokes the refresh token so it can no longer mint new access tokens.
-     */
     public void signout(String accessToken, String refreshToken) {
         if (accessToken != null) {
             try {
@@ -104,10 +90,10 @@ public class AuthService {
         }
     }
 
-    public UserResponse getCurrentUser(UUID userId) {
+    public UserResponseDTO getCurrentUser(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UnauthorizedException("User no longer exists"));
-        return new UserResponse(user.getId().toString(), user.getFirstName() + " " + user.getLastName(), user.getEmail());
+        return new UserResponseDTO(user.getId().toString(), user.getFirstName() + " " + user.getLastName(), user.getEmail());
     }
 
     private TokenPair issueTokenPair(UUID userId, String email) {

@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SigninRequest {
+public class SigninRequestDTO {
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email must be a valid email address")

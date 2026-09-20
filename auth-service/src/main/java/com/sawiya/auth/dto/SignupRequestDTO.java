@@ -9,7 +9,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SignupRequest {
+public class SignupRequestDTO {
 
     @NotBlank(message = "First name is required")
     private String firstName;
@@ -22,7 +22,6 @@ public class SignupRequest {
     private String email;
 
     // Policy: min 8 chars, at least one uppercase, one lowercase, one digit, one special char.
-    // Documented in README.
     @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be at least 8 characters long")
     @Pattern(

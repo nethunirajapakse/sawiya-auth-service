@@ -20,12 +20,11 @@ public class CookieFactory {
     }
 
     public ResponseCookie buildRefreshTokenCookie(String token, Duration maxAge) {
-        // Scoped to the refresh endpoint only, so it isn't sent on every request.
         return ResponseCookie.from(REFRESH_TOKEN_COOKIE, token)
                 .httpOnly(true)
                 .secure(cookieProperties.isSecure())
                 .sameSite("Strict")
-                .path("/api/auth/refresh")
+                .path("/api/auth")
                 .maxAge(maxAge)
                 .build();
     }
@@ -39,7 +38,7 @@ public class CookieFactory {
                 .httpOnly(true)
                 .secure(cookieProperties.isSecure())
                 .sameSite("Strict")
-                .path("/api/auth/refresh")
+                .path("/api/auth")
                 .maxAge(Duration.ZERO)
                 .build();
     }

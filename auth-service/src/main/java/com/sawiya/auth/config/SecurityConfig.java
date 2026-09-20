@@ -1,8 +1,12 @@
 package com.sawiya.auth.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sawiya.auth.dto.ErrorResponse;
+import com.sawiya.auth.dto.ErrorResponseDTO;
 import com.sawiya.auth.filter.JwtAuthenticationFilter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,8 +19,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.web.filter.OncePerRequestFilter;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -44,8 +52,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
-        // httpOnly=false is intentional and required for double-submit: the frontend JS needs
-        // to read the CSRF cookie value and echo it back in a custom request header.
 
         CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
 
@@ -53,9 +59,6 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                     .csrfTokenRepository(csrfTokenRepository)
                     .csrfTokenRequestHandler(requestHandler)
-                    // Signup/signin happen before a session exists, so there is no CSRF cookie
-                    // yet to double-submit; they are credential-based, not cookie-authenticated,
-                    // so CSRF does not apply to them.
                     .ignoringRequestMatchers("/api/auth/signup", "/api/auth/signin")
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -68,12 +71,27 @@ public class SecurityConfig {
             .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint((request, response, authException) -> {
                 response.setStatus(401);
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                ErrorResponse body = ErrorResponse.of(401, "Unauthorized", List.of("Authentication required"));
+                ErrorResponseDTO body = ErrorResponseDTO.of(401, "Unauthorized", List.of("Authentication required"));
                 new ObjectMapper().registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
                         .writeValue(response.getWriter(), body);
             }))
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(csrfCookieFilter(), CsrfFilter.class);
 
         return http.build();
+    }
+
+    private OncePerRequestFilter csrfCookieFilter() {
+        return new OncePerRequestFilter() {
+            @Override
+            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+                    throws ServletException, IOException {
+                CsrfToken csrfToken = (CsrfToken) request.getAttribute("_csrf");
+                if (csrfToken != null) {
+                    csrfToken.getToken();
+                }
+                filterChain.doFilter(request, response);
+            }
+        };
     }
 }

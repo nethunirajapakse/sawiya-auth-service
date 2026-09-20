@@ -32,6 +32,7 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    /** BCrypt hash - never the raw password. */
     @Column(nullable = false)
     private String password;
 

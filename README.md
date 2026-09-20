@@ -3,7 +3,7 @@
 A JWT-based User Authentication REST API built in Java 17 / Spring Boot 3, submitted for
 the Sawiya Backend Developer (Java / Spring Boot) technical assignment.
 
-Signup, signin, refresh, signout, and "who am I" — with short-lived access tokens, rotating
+Signup, signin, refresh, signout, and "who am I", with short-lived access tokens, rotating
 refresh tokens, Redis-backed revocation protected by a circuit breaker, and CSRF-protected
 cookie sessions.
 

@@ -21,24 +21,28 @@ public class GlobalExceptionHandler {
         List<String> messages = ex.getBindingResult().getFieldErrors().stream()
                 .map(fieldError -> fieldError.getDefaultMessage())
                 .toList();
+        log.warn("Validation failed on {}: {}", ex.getObjectName(), messages);
         return ResponseEntity.badRequest()
                 .body(ErrorResponseDTO.of(HttpStatus.BAD_REQUEST.value(), "Validation Failed", messages));
     }
 
     @ExceptionHandler(DuplicateEmailException.class)
     public ResponseEntity<ErrorResponseDTO> handleDuplicateEmail(DuplicateEmailException ex) {
+        log.warn("Signup rejected - duplicate email: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ErrorResponseDTO.of(HttpStatus.CONFLICT.value(), "Conflict", List.of(ex.getMessage())));
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ErrorResponseDTO> handleInvalidCredentials(InvalidCredentialsException ex) {
+        log.warn("Signin failed - invalid credentials: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponseDTO.of(HttpStatus.UNAUTHORIZED.value(), "Unauthorized", List.of(ex.getMessage())));
     }
 
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ErrorResponseDTO> handleUnauthorized(UnauthorizedException ex) {
+        log.warn("Unauthorized request: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponseDTO.of(HttpStatus.UNAUTHORIZED.value(), "Unauthorized", List.of(ex.getMessage())));
     }

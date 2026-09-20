@@ -5,7 +5,7 @@ services:
     image: postgres:16
     container_name: sawiya-postgres
     environment:
-      POSTGRES_DB: sawiya_auth
+      POSTGRES_DB: sawiya_auth_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:

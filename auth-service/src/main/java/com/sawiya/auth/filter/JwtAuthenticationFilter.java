@@ -11,6 +11,8 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -23,6 +25,8 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtService jwtService;
     private final TokenDenylistService tokenDenylistService;
@@ -43,8 +47,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     var authentication = new UsernamePasswordAuthenticationToken(userId, null, List.of());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
-            } catch (JwtException | IllegalArgumentException ignored) {
-                // Invalid, expired, or malformed token - request proceeds unauthenticated.
+            } catch (JwtException | IllegalArgumentException e) {
+                log.debug("Ignoring invalid/expired/malformed access token on {} {}: {}",
+                        request.getMethod(), request.getRequestURI(), e.toString());
             }
         }
 

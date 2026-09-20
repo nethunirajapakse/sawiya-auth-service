@@ -12,6 +12,8 @@ import com.sawiya.auth.security.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,8 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -76,16 +80,16 @@ public class AuthService {
             try {
                 Claims claims = jwtService.parseClaims(accessToken);
                 tokenDenylistService.denylist(claims.getId(), claims.getExpiration().toInstant());
-            } catch (JwtException ignored) {
-                // Already invalid/expired - nothing to denylist.
+            } catch (JwtException e) {
+                log.debug("Signout: access token already invalid, nothing to denylist ({})", e.toString());
             }
         }
         if (refreshToken != null) {
             try {
                 Claims claims = jwtService.parseClaims(refreshToken);
                 refreshTokenStore.revoke(claims.getId());
-            } catch (JwtException ignored) {
-                // Already invalid/expired - nothing to revoke.
+            } catch (JwtException e) {
+                log.debug("Signout: refresh token already invalid, nothing to revoke ({})", e.toString());
             }
         }
     }

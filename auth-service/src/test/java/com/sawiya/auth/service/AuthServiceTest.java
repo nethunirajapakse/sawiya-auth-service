@@ -5,6 +5,7 @@ import com.sawiya.auth.dto.SignupRequestDTO;
 import com.sawiya.auth.entity.User;
 import com.sawiya.auth.exception.DuplicateEmailException;
 import com.sawiya.auth.exception.InvalidCredentialsException;
+import com.sawiya.auth.exception.UnauthorizedException;
 import com.sawiya.auth.repository.UserRepository;
 import com.sawiya.auth.security.JwtService;
 import io.jsonwebtoken.Claims;
@@ -132,6 +133,15 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.signin(request))
                 .isInstanceOf(InvalidCredentialsException.class);
+    }
+
+    @Test
+    void refresh_throwsWhenCookieIsMissing() {
+        assertThatThrownBy(() -> authService.refresh(null))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessage("Refresh token missing");
+
+        verifyNoInteractions(jwtService, refreshTokenStore);
     }
 
     @Test

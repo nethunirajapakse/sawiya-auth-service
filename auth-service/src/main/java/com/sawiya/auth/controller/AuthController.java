@@ -4,7 +4,6 @@ import com.sawiya.auth.dto.MessageResponseDTO;
 import com.sawiya.auth.dto.SigninRequestDTO;
 import com.sawiya.auth.dto.SignupRequestDTO;
 import com.sawiya.auth.dto.UserResponseDTO;
-import com.sawiya.auth.exception.UnauthorizedException;
 import com.sawiya.auth.security.CookieFactory;
 import com.sawiya.auth.service.AuthService;
 import jakarta.validation.Valid;
@@ -43,9 +42,6 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<MessageResponseDTO> refresh(
             @CookieValue(name = CookieFactory.REFRESH_TOKEN_COOKIE, required = false) String refreshTokenCookie) {
-        if (refreshTokenCookie == null) {
-            throw new UnauthorizedException("Refresh token missing");
-        }
         AuthService.TokenPair tokens = authService.refresh(refreshTokenCookie);
         return withTokenCookies(tokens, new MessageResponseDTO("Token refreshed"));
     }

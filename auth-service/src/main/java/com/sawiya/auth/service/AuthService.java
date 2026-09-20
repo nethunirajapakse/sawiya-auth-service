@@ -58,6 +58,10 @@ public class AuthService {
     }
 
     public TokenPair refresh(String refreshToken) {
+        if (refreshToken == null) {
+            throw new UnauthorizedException("Refresh token missing");
+        }
+
         Claims claims = parseOrThrow(refreshToken);
 
         String jti = claims.getId();

@@ -21,22 +21,16 @@ cookie sessions.
 
 ```mermaid
 flowchart TD
-    Client(["Client<br/>browser / Postman"])
-
-    subgraph App["Auth Service - Spring Boot"]
-        direction TB
-        Filters["Security filter chain<br/>JWT auth + CSRF"]
-        Controller["Auth controller"]
-        Service["Auth service + token stores"]
-        Filters --> Controller --> Service
-    end
-
+    Client(["Client"])
+    Filter["JWT auth filter<br/>checks token + denylist"]
+    Controller["Auth controller<br/>signup / signin / refresh / signout / me"]
+    Service["Auth service<br/>business logic, token issuing"]
     Postgres[("PostgreSQL<br/>user accounts")]
     Redis[("Redis<br/>denylist + refresh tokens")]
 
-    Client -- "HTTPS, cookies" --> Filters
+    Client --> Filter --> Controller --> Service
     Service --> Postgres
-    App -- "via circuit breaker" --> Redis
+    Service -- "via circuit breaker" --> Redis
 ```
 
 Redis calls go through a Resilience4j circuit breaker: if Redis is unreachable, reads fail

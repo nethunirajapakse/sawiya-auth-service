@@ -1,36 +1,50 @@
 package com.sawiya.auth.service;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
 
-/**
- * Tracks revoked ACCESS token jtis in Redis.
- * <p>
- * Key: "denylist:{jti}" -> "1"
- * TTL: set to the token's remaining lifetime, so Redis expires the entry automatically
- * at (or just after) the moment the token itself would have expired anyway - no cleanup job needed.
- */
 @Service
 @RequiredArgsConstructor
 public class TokenDenylistService {
 
+    private static final Logger log = LoggerFactory.getLogger(TokenDenylistService.class);
     private static final String KEY_PREFIX = "denylist:";
 
     private final StringRedisTemplate redisTemplate;
 
+    @CircuitBreaker(name = "redis", fallbackMethod = "denylistFallback")
     public void denylist(String jti, Instant expiresAt) {
         long ttlSeconds = Duration.between(Instant.now(), expiresAt).getSeconds();
         if (ttlSeconds <= 0) {
-            return; // already expired, nothing to track
+            return;
         }
         redisTemplate.opsForValue().set(KEY_PREFIX + jti, "1", Duration.ofSeconds(ttlSeconds));
     }
 
+    @SuppressWarnings("unused")
+    private void denylistFallback(String jti, Instant expiresAt, Throwable t) {
+        log.warn("Could not denylist access token jti={} - Redis unavailable ({}). Signout will " +
+                "still succeed (cookies cleared), but this token may remain technically usable " +
+                "until it naturally expires.", jti, t.toString());
+    }
+
+    @CircuitBreaker(name = "redis", fallbackMethod = "isDenylistedFallback")
     public boolean isDenylisted(String jti) {
         return Boolean.TRUE.equals(redisTemplate.hasKey(KEY_PREFIX + jti));
+    }
+
+    @SuppressWarnings("unused")
+    private boolean isDenylistedFallback(String jti, Throwable t) {
+        log.warn("Could not check denylist for jti={} - Redis unavailable ({}), failing open " +
+                "(treating token as not denylisted) so authenticated requests aren't blocked " +
+                "by a Redis outage.", jti, t.toString());
+        return false;
     }
 }

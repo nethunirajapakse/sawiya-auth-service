@@ -7,8 +7,6 @@ import com.sawiya.auth.dto.UserResponse;
 import com.sawiya.auth.exception.UnauthorizedException;
 import com.sawiya.auth.security.CookieFactory;
 import com.sawiya.auth.service.AuthService;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;

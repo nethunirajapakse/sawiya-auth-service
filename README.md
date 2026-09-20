@@ -20,18 +20,15 @@ cookie sessions.
 ## How a request flows
 
 ```mermaid
-flowchart TD
+flowchart LR
     Client(["Client"])
-    Filter["JWT auth filter<br/>parses token, checks denylist"]
-    Controller["Auth controller<br/>signup / signin / refresh / signout / me"]
-    Service["Auth service<br/>business logic, token issuing"]
+    Auth["Sawiya Auth Service<br/>stateless, cookie-based JWT auth"]
     Postgres[("PostgreSQL<br/>user accounts")]
-    Redis[("Redis<br/>denylist + refresh tokens")]
+    Redis[("Redis<br/>token revocation")]
 
-    Client --> Filter --> Controller --> Service
-    Service --> Postgres
-    Filter -- "denylist check, via circuit breaker" --> Redis
-    Service -- "store/revoke tokens, via circuit breaker" --> Redis
+    Client <--> Auth
+    Auth --> Postgres
+    Auth -- "via circuit breaker" --> Redis
 ```
 
 Redis calls go through a Resilience4j circuit breaker: if Redis is unreachable, reads fail

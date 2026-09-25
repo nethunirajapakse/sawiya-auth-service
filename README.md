@@ -27,10 +27,12 @@ flowchart TD
     Service["Auth service<br/>business logic, token issuing"]
     Postgres[("PostgreSQL<br/>user accounts")]
     Redis[("Redis<br/>denylist + refresh tokens")]
+    CircuitBreaker{"Circuit breaker"}
 
     Client --> Filter --> Controller --> Service
     Service --> Postgres
-    Service -- "via circuit breaker" --> Redis
+    Service --> CircuitBreaker
+    CircuitBreaker --> Redis
 ```
 
 Redis calls go through a Resilience4j circuit breaker: if Redis is unreachable, reads fail
